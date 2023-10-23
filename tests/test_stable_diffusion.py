@@ -195,7 +195,7 @@ class TestStableDiffusionForTextToImage(unittest.TestCase):
         ])
         logger.info(f"Executing `{cmd}`")
         os.system(cmd)
-        logger.info(f"Image generation with Swift CLI is complete")
+        logger.info("Image generation with Swift CLI is complete")
 
         # Load Swift CLI generated image
         swift_cli_image = Image.open(
@@ -294,13 +294,12 @@ def _reset_seed():
 
 
 def _get_test_artifacts_dir(args):
-    if cli_args.persistent_test_artifacts_dir is not None:
-        os.makedirs(cli_args.persistent_test_artifacts_dir, exist_ok=True)
-        return contextlib.nullcontext(
-            enter_result=cli_args.persistent_test_artifacts_dir)
-    else:
+    if cli_args.persistent_test_artifacts_dir is None:
         return tempfile.TemporaryDirectory(
             prefix="python_coreml_stable_diffusion_tests")
+    os.makedirs(cli_args.persistent_test_artifacts_dir, exist_ok=True)
+    return contextlib.nullcontext(
+        enter_result=cli_args.persistent_test_artifacts_dir)
 
 
 def _extend_parser(parser):

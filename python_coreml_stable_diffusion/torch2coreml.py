@@ -57,9 +57,7 @@ def compute_psnr(a, b):
 
     eps = 1e-5
     eps2 = 1e-10
-    psnr = 20 * np.log10((max_b + eps) / (sumdeltasq + eps2))
-
-    return psnr
+    return 20 * np.log10((max_b + eps) / (sumdeltasq + eps2))
 
 
 ABSOLUTE_MIN_PSNR = 35
@@ -354,16 +352,16 @@ def modify_coremltools_torch_frontend_badbmm():
                 logger.warning(
                     f"Casted the `beta`(value={beta.val}) argument of `baddbmm` op "
                     "from int32 to float32 dtype for conversion!")
-            bias = mb.mul(x=beta, y=bias, name=bias.name + "_scaled")
+            bias = mb.mul(x=beta, y=bias, name=f"{bias.name}_scaled")
 
             context.add(bias)
 
         if alpha.val != 1.0:
             # Apply scaling factor alpha to the input.
-            batch1 = mb.mul(x=alpha, y=batch1, name=batch1.name + "_scaled")
+            batch1 = mb.mul(x=alpha, y=batch1, name=f"{batch1.name}_scaled")
             context.add(batch1)
 
-        bmm_node = mb.matmul(x=batch1, y=batch2, name=node.name + "_bmm")
+        bmm_node = mb.matmul(x=batch1, y=batch2, name=f"{node.name}_bmm")
         context.add(bmm_node)
 
         baddbmm_node = mb.add(x=bias, y=bmm_node, name=node.name)
@@ -849,9 +847,9 @@ def convert_safety_checker(pipe, args):
         "Bias added to the concept scores to trade off increased recall for reduce precision in the safety checker classifier"
 
     # Set the output descriptions
-    coreml_safety_checker.output_description["filtered_images"] = \
-        f"Identical to the input `images`. If safety checker detected any sensitive content, " \
-        "the corresponding image is replaced with a blank image (zeros)"
+    coreml_safety_checker.output_description[
+        "filtered_images"
+    ] = 'Identical to the input `images`. If safety checker detected any sensitive content, the corresponding image is replaced with a blank image (zeros)'
     coreml_safety_checker.output_description["has_nsfw_concepts"] = \
         "Indicates whether the safety checker model found any sensitive content in the given image"
     coreml_safety_checker.output_description["concept_scores"] = \
@@ -937,10 +935,11 @@ def parser_spec():
         ("The pre-trained model checkpoint and configuration to restore. "
          "For available versions: https://huggingface.co/models?search=stable-diffusion"
          ))
-    parser.add_argument("--compute-unit",
-                        choices=tuple(cu
-                                      for cu in ct.ComputeUnit._member_names_),
-                        default="ALL")
+    parser.add_argument(
+        "--compute-unit",
+        choices=tuple(ct.ComputeUnit._member_names_),
+        default="ALL",
+    )
 
     parser.add_argument(
         "--latent-h",
@@ -958,11 +957,9 @@ def parser_spec():
     )
     parser.add_argument(
         "--attention-implementation",
-        choices=tuple(ai
-                      for ai in unet.AttentionImplementations._member_names_),
+        choices=tuple(unet.AttentionImplementations._member_names_),
         default=unet.ATTENTION_IMPLEMENTATION_IN_EFFECT.name,
-        help=
-        "The enumerated implementations trade off between ANE and GPU performance",
+        help="The enumerated implementations trade off between ANE and GPU performance",
     )
     parser.add_argument(
         "-o",

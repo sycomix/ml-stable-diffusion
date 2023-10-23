@@ -181,9 +181,9 @@ def linear_to_conv2d_map(state_dict, prefix, local_metadata, strict,
 def correct_for_bias_scale_order_inversion(state_dict, prefix, local_metadata,
                                            strict, missing_keys,
                                            unexpected_keys, error_msgs):
-    state_dict[prefix +
-               "bias"] = state_dict[prefix + "bias"] / state_dict[prefix +
-                                                                  "weight"]
+    state_dict[prefix + "bias"] = (
+        state_dict[f"{prefix}bias"] / state_dict[prefix + "weight"]
+    )
     return state_dict
 
 
@@ -518,9 +518,7 @@ class ResnetBlock2D(nn.Module):
         if self.conv_shortcut is not None:
             x = self.conv_shortcut(x)
 
-        out = (x + hidden_states)
-
-        return out
+        return (x + hidden_states)
 
 
 class Upsample2D(nn.Module):
@@ -570,13 +568,14 @@ class SpatialTransformer(nn.Module):
                                  stride=1,
                                  padding=0)
 
-        self.transformer_blocks = nn.ModuleList([
-            BasicTransformerBlock(inner_dim,
-                                  n_heads,
-                                  d_head,
-                                  context_dim=context_dim)
-            for d in range(depth)
-        ])
+        self.transformer_blocks = nn.ModuleList(
+            [
+                BasicTransformerBlock(
+                    inner_dim, n_heads, d_head, context_dim=context_dim
+                )
+                for _ in range(depth)
+            ]
+        )
 
         self.proj_out = nn.Conv2d(inner_dim,
                                   in_channels,
@@ -685,13 +684,12 @@ class Timesteps(nn.Module):
         self.downscale_freq_shift = downscale_freq_shift
 
     def forward(self, timesteps):
-        t_emb = get_timestep_embedding(
+        return get_timestep_embedding(
             timesteps,
             self.num_channels,
             flip_sin_to_cos=self.flip_sin_to_cos,
             downscale_freq_shift=self.downscale_freq_shift,
         )
-        return t_emb
 
 
 def get_timestep_embedding(

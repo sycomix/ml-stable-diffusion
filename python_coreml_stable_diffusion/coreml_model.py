@@ -55,24 +55,23 @@ class CoreMLModel:
 
     def _verify_inputs(self, **kwargs):
         for k, v in kwargs.items():
-            if k in self.expected_inputs:
-                if not isinstance(v, np.ndarray):
-                    raise TypeError(
-                        f"Expected numpy.ndarray, got {v} for input: {k}")
-
-                expected_dtype = self.expected_inputs[k]["dtype"]
-                if not v.dtype == expected_dtype:
-                    raise TypeError(
-                        f"Expected dtype {expected_dtype}, got {v.dtype} for input: {k}"
-                    )
-
-                expected_shape = self.expected_inputs[k]["shape"]
-                if not v.shape == expected_shape:
-                    raise TypeError(
-                        f"Expected shape {expected_shape}, got {v.shape} for input: {k}"
-                    )
-            else:
+            if k not in self.expected_inputs:
                 raise ValueError("Received unexpected input kwarg: {k}")
+            if not isinstance(v, np.ndarray):
+                raise TypeError(
+                    f"Expected numpy.ndarray, got {v} for input: {k}")
+
+            expected_dtype = self.expected_inputs[k]["dtype"]
+            if v.dtype != expected_dtype:
+                raise TypeError(
+                    f"Expected dtype {expected_dtype}, got {v.dtype} for input: {k}"
+                )
+
+            expected_shape = self.expected_inputs[k]["shape"]
+            if v.shape != expected_shape:
+                raise TypeError(
+                    f"Expected shape {expected_shape}, got {v.shape} for input: {k}"
+                )
 
     def __call__(self, **kwargs):
         self._verify_inputs(**kwargs)
@@ -99,4 +98,4 @@ def _load_mlpackage(submodule_name, mlpackages_dir, model_version,
     return CoreMLModel(mlpackage_path, compute_unit)
 
 def get_available_compute_units():
-    return tuple(cu for cu in ct.ComputeUnit._member_names_)
+    return tuple(ct.ComputeUnit._member_names_)

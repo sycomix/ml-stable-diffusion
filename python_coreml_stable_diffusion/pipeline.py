@@ -226,8 +226,8 @@ class CoreMLStableDiffusionPipeline(DiffusionPipeline):
         if height != self.height or width != self.width:
             logger.warning(
                 "`height` and `width` dimensions (of the output image tensor) are fixed when exporting the Core ML models " \
-                "unless flexible shapes are used during export (https://coremltools.readme.io/docs/flexible-inputs). " \
-                "This pipeline was provided with Core ML models that generate {self.height}x{self.width} images (user requested {height}x{width})"
+                    "unless flexible shapes are used during export (https://coremltools.readme.io/docs/flexible-inputs). " \
+                    "This pipeline was provided with Core ML models that generate {self.height}x{self.width} images (user requested {height}x{width})"
             )
 
         if not isinstance(prompt, str) and not isinstance(prompt, list):
@@ -240,9 +240,11 @@ class CoreMLStableDiffusionPipeline(DiffusionPipeline):
                 f"`height` and `width` have to be divisible by 8 but are {height} and {width}."
             )
 
-        if (callback_steps is None) or (callback_steps is not None and
-                                        (not isinstance(callback_steps, int)
-                                         or callback_steps <= 0)):
+        if (
+            callback_steps is None
+            or not isinstance(callback_steps, int)
+            or callback_steps <= 0
+        ):
             raise ValueError(
                 f"`callback_steps` has to be a positive integer but is {callback_steps} of type"
                 f" {type(callback_steps)}.")
@@ -368,15 +370,17 @@ class CoreMLStableDiffusionPipeline(DiffusionPipeline):
 
 
 def get_available_schedulers():
-    schedulers = {}
-    for scheduler in [DDIMScheduler,
-                      DPMSolverMultistepScheduler,
-                      EulerAncestralDiscreteScheduler,
-                      EulerDiscreteScheduler,
-                      LMSDiscreteScheduler,
-                      PNDMScheduler]:
-        schedulers[scheduler().__class__.__name__.replace("Scheduler", "")] = scheduler
-    return schedulers
+    return {
+        scheduler().__class__.__name__.replace("Scheduler", ""): scheduler
+        for scheduler in [
+            DDIMScheduler,
+            DPMSolverMultistepScheduler,
+            EulerAncestralDiscreteScheduler,
+            EulerDiscreteScheduler,
+            LMSDiscreteScheduler,
+            PNDMScheduler,
+        ]
+    }
 
 SCHEDULER_MAP = get_available_schedulers()
 
@@ -451,7 +455,7 @@ def get_image_path(args, **override_kwargs):
         out_fname += f"_customScheduler_{override_kwargs.get('scheduler', None) or args.scheduler}"
         out_fname += f"_numInferenceSteps{override_kwargs.get('num_inference_steps', None) or args.num_inference_steps}"
 
-    return os.path.join(out_folder, out_fname + ".png")
+    return os.path.join(out_folder, f"{out_fname}.png")
 
 
 def main(args):

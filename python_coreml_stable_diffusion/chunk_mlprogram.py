@@ -35,26 +35,20 @@ def _verify_output_correctness_of_chunks(full_model, first_chunk_model,
                                          second_chunk_model):
     """ Verifies the end-to-end output correctness of full (original) model versus chunked models
     """
-    # Generate inputs for first chunk and full model
-    input_dict = {}
-    for input_desc in full_model._spec.description.input:
-        input_dict[input_desc.name] = random_gen_input_feature_type(input_desc)
-
+    input_dict = {
+        input_desc.name: random_gen_input_feature_type(input_desc)
+        for input_desc in full_model._spec.description.input
+    }
     # Generate outputs for first chunk and full model
     outputs_from_full_model = full_model.predict(input_dict)
     outputs_from_first_chunk_model = first_chunk_model.predict(input_dict)
 
-    # Prepare inputs for second chunk model from first chunk's outputs and regular inputs
-    second_chunk_input_dict = {}
-    for input_desc in second_chunk_model._spec.description.input:
-        if input_desc.name in outputs_from_first_chunk_model:
-            second_chunk_input_dict[
-                input_desc.name] = outputs_from_first_chunk_model[
-                    input_desc.name]
-        else:
-            second_chunk_input_dict[input_desc.name] = input_dict[
-                input_desc.name]
-
+    second_chunk_input_dict = {
+        input_desc.name: outputs_from_first_chunk_model[input_desc.name]
+        if input_desc.name in outputs_from_first_chunk_model
+        else input_dict[input_desc.name]
+        for input_desc in second_chunk_model._spec.description.input
+    }
     # Generate output for second chunk model
     outputs_from_second_chunk_model = second_chunk_model.predict(
         second_chunk_input_dict)
@@ -213,10 +207,12 @@ def main(args):
     # Check filename extension
     mlpackage_name = os.path.basename(args.mlpackage_path)
     name, ext = os.path.splitext(mlpackage_name)
-    assert ext == ".mlpackage", f"`--mlpackage-path` (args.mlpackage_path) is not an .mlpackage file"
+    assert (
+        ext == ".mlpackage"
+    ), "`--mlpackage-path` (args.mlpackage_path) is not an .mlpackage file"
 
     # Load CoreML model
-    logger.info("Loading model from {}".format(args.mlpackage_path))
+    logger.info(f"Loading model from {args.mlpackage_path}")
     start_ = time.time()
     model = ct.models.MLModel(
         args.mlpackage_path,
@@ -294,8 +290,8 @@ def main(args):
         logger.info("Done.")
 
     # Save the chunked models to disk
-    out_path_chunk1 = os.path.join(args.o, name + "_chunk1.mlpackage")
-    out_path_chunk2 = os.path.join(args.o, name + "_chunk2.mlpackage")
+    out_path_chunk1 = os.path.join(args.o, f"{name}_chunk1.mlpackage")
+    out_path_chunk2 = os.path.join(args.o, f"{name}_chunk2.mlpackage")
 
     logger.info(
         f"Saved chunks in {args.o} with the suffix _chunk1.mlpackage and _chunk2.mlpackage"
